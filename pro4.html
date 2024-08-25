@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .filter-container {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 10px;
+            border: none;
+            background-color: #f1f3f5;
+            color: #333;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .filter-btn.active {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .filter-btn:hover {
+            background-color: #e2e6ea;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .task-text {
+            flex: 1;
+        }
+
+        .completed .task-text {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .task-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .task-actions span {
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #007bff;
+        }
+
+        .task-actions input[type="checkbox"] {
+            margin-left: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>To-Do List</h1>
+        <div class="input-container">
+            <input type="text" id="new-task-input" placeholder="Add a new task">
+            <button id="add-task-btn">Add Task</button>
+        </div>
+        <div class="filter-container">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="pending">Pending</button>
+            <button class="filter-btn" data-filter="completed">Completed</button>
+        </div>
+        <ul id="task-list"></ul>
+    </div>
+
+    <script>
+
+        const taskInput = document.getElementById('new-task-input');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const taskList = document.getElementById('task-list');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+
+        let tasks = [];
+
+
+        const addTask = () => {
+            const taskText = taskInput.value.trim();
+            if (taskText) {
+                tasks.push({ text: taskText, completed: false });
+                taskInput.value = '';
+                renderTasks();
+            }
+        };
+
+
+        const deleteTask = (index) => {
+            tasks.splice(index, 1);
+            renderTasks();
+        };
+
+
+        const editTask = (index) => {
+            const newTaskText = prompt('Edit Task', tasks[index].text);
+            if (newTaskText !== null) {
+                tasks[index].text = newTaskText;
+                renderTasks();
+            }
+        };
+
+
+        const toggleTaskCompletion = (index) => {
+            tasks[index].completed = !tasks[index].completed;
+            renderTasks();
+        };
+
+
+        const renderTasks = (filter = 'all') => {
+            taskList.innerHTML = '';
+            tasks
+                .filter((task) => {
+                    if (filter === 'completed') return task.completed;
+                    if (filter === 'pending') return !task.completed;
+                    return true;
+                })
+                .forEach((task, index) => {
+                    const li = document.createElement('li');
+                    li.classList.toggle('completed', task.completed);
+                    li.innerHTML = `
+                        <span class="task-text">${task.text}</span>
+                        <div class="task-actions">
+                            <span class="edit-btn" onclick="editTask(${index})">Edit</span>
+                            <span class="delete-btn" onclick="deleteTask(${index})">Delete</span>
+                            <input type="checkbox" ${task.completed ? 'checked' : ''} onclick="toggleTaskCompletion(${index})">
+                        </div>
+                    `;
+                    taskList.appendChild(li);
+                });
+        };
+
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                filterBtns.forEach(button => button.classList.remove('active'));
+                const filter = e.target.getAttribute('data-filter');
+                e.target.classList.add('active');
+                renderTasks(filter);
+            });
+        });
+
+
+        addTaskBtn.addEventListener('click', addTask);
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        renderTasks();
+    </script>
+</body>
+</html>
